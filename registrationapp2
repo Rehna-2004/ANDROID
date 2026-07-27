@@ -1,0 +1,29 @@
+package com.example.registrationapp;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity2 extends AppCompatActivity {
+
+    TextView tvWelcome;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main2);
+
+        tvWelcome = findViewById(R.id.textView);
+
+        // Receive data using Intent
+        String name = getIntent().getStringExtra("name");
+
+        // Read data from SharedPreferences
+        SharedPreferences sp = getSharedPreferences("UserData", MODE_PRIVATE);
+        String email = sp.getString("email", "");
+
+        tvWelcome.setText(" WELCOME " + "\nName: " + name + "\nEmail: " + email);
+    }
+}
