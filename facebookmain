@@ -1,0 +1,60 @@
+package com.example.facebook;
+
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+
+    String correctUsername = "admin123";
+    String correctPassword = "12345";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+
+        EditText username =
+                findViewById(R.id.editTextText);
+
+        EditText password =
+                findViewById(R.id.editTextText2);
+
+        Button loginButton =
+                findViewById(R.id.button);
+
+        loginButton.setOnClickListener(v -> {
+
+            String enteredUsername =
+                    username.getText().toString().trim();
+
+            String enteredPassword =
+                    password.getText().toString().trim();
+
+            if (enteredUsername.equals(correctUsername)
+                    && enteredPassword.equals(correctPassword)) {
+
+                Toast.makeText(
+                        MainActivity.this,
+                        "Login Successful",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+            } else {
+
+                Toast.makeText(
+                        MainActivity.this,
+                        "Invalid Username or Password",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+    }
+}
+
