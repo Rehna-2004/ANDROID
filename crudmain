@@ -1,0 +1,123 @@
+package com.example.cruds;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+
+    EditText name, age;
+    Button insert,update;
+    TextView display;
+
+    SQLiteDatabase db;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        name = findViewById(R.id.name);
+        age = findViewById(R.id.age);
+        insert = findViewById(R.id.insert);
+        display = findViewById(R.id.display);
+        update = findViewById(R.id.update);
+
+        // Create SQLite database
+        db = openOrCreateDatabase(
+                "StudentDB",
+                Context.MODE_PRIVATE,
+                null
+        );
+
+        // Create table
+        db.execSQL(
+                "CREATE TABLE IF NOT EXISTS student (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        "name TEXT, " +
+                        "age INTEGER)"
+        );
+
+        insert.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String studentName = name.getText().toString();
+                String studentAge = age.getText().toString();
+
+                if (studentName.isEmpty() || studentAge.isEmpty()) {
+                    Toast.makeText(
+                            MainActivity.this,
+                            "Please enter Name and Age",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                } else {
+
+                    db.execSQL(
+                            "INSERT INTO student (name, age) VALUES (?, ?)",
+                            new Object[]{studentName, Integer.parseInt(studentAge)}
+                    );
+
+                    display.setText(
+
+                            "Name: " + studentName +
+                            "\nAge: " + studentAge
+                    );
+
+                    Toast.makeText(
+                            MainActivity.this,
+                            "Data Inserted Successfully",
+                            Toast.LENGTH_SHORT
+                    ).show();
+
+                    name.setText("");
+                    age.setText("");
+                }
+            }
+        });
+
+        update.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String studentName = name.getText().toString().trim();
+                String studentAge = age.getText().toString().trim();
+
+                if (studentName.isEmpty() || studentAge.isEmpty()) {
+
+                    Toast.makeText(
+                            MainActivity.this,
+                            "Enter Name and New Age",
+                            Toast.LENGTH_SHORT
+                    ).show();
+
+                } else {
+
+                    db.execSQL(
+                            "UPDATE student SET age = ? WHERE name = ?",
+                            new Object[]{
+                                    Integer.parseInt(studentAge),
+                                    studentName
+                            }
+                    );
+
+                    Toast.makeText(
+                            MainActivity.this,
+                            "Data Updated Successfully",
+                            Toast.LENGTH_SHORT
+                    ).show();
+
+                    name.setText("");
+                    age.setText("");
+                }
+            }
+        });
+    }
+}
