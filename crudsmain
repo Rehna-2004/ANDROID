@@ -1,0 +1,184 @@
+package com.example.cruds;
+
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+
+    EditText name, age;
+    Button insert, update, view;
+    TextView display;
+
+    SQLiteDatabase db;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        name = findViewById(R.id.name);
+        age = findViewById(R.id.age);
+        insert = findViewById(R.id.insert);
+        update = findViewById(R.id.update);
+        view = findViewById(R.id.view);
+        display = findViewById(R.id.display);
+
+        db = openOrCreateDatabase(
+                "StudentDB",
+                Context.MODE_PRIVATE,
+                null
+        );
+
+        db.execSQL(
+                "CREATE TABLE IF NOT EXISTS student (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        "name TEXT, " +
+                        "age INTEGER)"
+        );
+
+        // INSERT
+        insert.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String studentName = name.getText().toString().trim();
+                String studentAge = age.getText().toString().trim();
+
+                if (studentName.isEmpty() || studentAge.isEmpty()) {
+                    Toast.makeText(MainActivity.this,
+                            "Enter Name and Age",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                try {
+                    int studentAgeValue = Integer.parseInt(studentAge);
+
+                    db.execSQL(
+                            "INSERT INTO student (name, age) VALUES (?, ?)",
+                            new Object[]{studentName, studentAgeValue}
+                    );
+
+                    Toast.makeText(MainActivity.this,
+                            "Data Inserted Successfully",
+                            Toast.LENGTH_SHORT).show();
+
+                    name.setText("");
+                    age.setText("");
+
+                } catch (NumberFormatException e) {
+                    Toast.makeText(MainActivity.this,
+                            "Enter a valid age",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        // UPDATE AGE USING NAME
+        update.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String studentName = name.getText().toString().trim();
+                String studentAge = age.getText().toString().trim();
+
+                if (studentName.isEmpty() || studentAge.isEmpty()) {
+                    Toast.makeText(MainActivity.this,
+                            "Enter Name and New Age",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                try {
+                    int studentAgeValue = Integer.parseInt(studentAge);
+
+                    Cursor c = db.rawQuery(
+                            "SELECT id FROM student WHERE name = ?",
+                            new String[]{studentName}
+                    );
+
+                    if (c.moveToFirst()) {
+                        c.close();
+
+                        db.execSQL(
+                                "UPDATE student SET age = ? WHERE name = ?",
+                                new Object[]{studentAgeValue, studentName}
+                        );
+
+                        Toast.makeText(MainActivity.this,
+                                "Data Updated Successfully",
+                                Toast.LENGTH_SHORT).show();
+
+                        name.setText("");
+                        age.setText("");
+
+                    } else {
+                        c.close();
+
+                        Toast.makeText(MainActivity.this,
+                                "Student Not Found",
+                                Toast.LENGTH_SHORT).show();
+                    }
+
+                } catch (NumberFormatException e) {
+                    Toast.makeText(MainActivity.this,
+                            "Enter a valid age",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        // VIEW ALL DATA
+        // SELECT DATA USING NAME
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String studentName = name.getText().toString().trim();
+
+                if (studentName.isEmpty()) {
+                    Toast.makeText(MainActivity.this,
+                            "Please enter student name",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                Cursor c = db.rawQuery(
+                        "SELECT * FROM student WHERE name = ?",
+                        new String[]{studentName}
+                );
+
+                if (c.moveToFirst()) {
+
+                    display.setText(
+                            "ID: " + c.getInt(0) +
+                                    "\nName: " + c.getString(1) +
+                                    "\nAge: " + c.getInt(2)
+                    );
+
+                } else {
+                    display.setText("Student Not Found");
+                }
+
+                c.close();
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (db != null && db.isOpen()) {
+            db.close();
+        }
+        super.onDestroy();
+    }
+}
