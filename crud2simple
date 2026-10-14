@@ -1,0 +1,199 @@
+package com.example.crude;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.DatabaseUtils;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+
+public class MainActivity extends AppCompatActivity
+        implements View.OnClickListener {
+
+    EditText Rollno, Name, Marks;
+    Button Insert, Delete, Update, ViewButton, ViewAll;
+    SQLiteDatabase db;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        Rollno = findViewById(R.id.Rollno);
+        Name = findViewById(R.id.Name);
+        Marks = findViewById(R.id.Marks);
+
+        Insert = findViewById(R.id.Insert);
+        Delete = findViewById(R.id.Delete);
+        Update = findViewById(R.id.Update);
+        ViewButton = findViewById(R.id.View);
+        ViewAll = findViewById(R.id.ViewAll);
+
+        Insert.setOnClickListener(this);
+        Delete.setOnClickListener(this);
+        Update.setOnClickListener(this);
+        ViewButton.setOnClickListener(this);
+        ViewAll.setOnClickListener(this);
+
+        db = openOrCreateDatabase(
+                "StudentDB", Context.MODE_PRIVATE, null);
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS student (" +
+                "rollno VARCHAR PRIMARY KEY, " +
+                "name VARCHAR, marks VARCHAR)");
+    }
+
+    @Override
+    public void onClick(View view) {
+
+        String roll = Rollno.getText().toString().trim();
+        String name = Name.getText().toString().trim();
+        String marks = Marks.getText().toString().trim();
+
+        // INSERT
+        if (view == Insert) {
+
+            if (roll.isEmpty() || name.isEmpty()
+                    || marks.isEmpty()) {
+                showMessage("Error", "Enter all values");
+                return;
+            }
+
+            ContentValues values = new ContentValues();
+            values.put("rollno", roll);
+            values.put("name", name);
+            values.put("marks", marks);
+
+            long result = db.insert("student", null, values);
+
+            if (result != -1) {
+                showMessage("Success", "Record added");
+                clearText();
+            } else {
+                showMessage("Error",
+                        "Record not added. Roll number may exist.");
+            }
+        }
+
+        // DELETE
+        else if (view == Delete) {
+
+            if (roll.isEmpty()) {
+                showMessage("Error", "Enter roll number");
+                return;
+            }
+
+            int result = db.delete(
+                    "student", "rollno = ?",
+                    new String[]{roll});
+
+            if (result > 0) {
+                showMessage("Success", "Record deleted");
+                clearText();
+            } else {
+                showMessage("Error", "Invalid roll number");
+            }
+        }
+
+        // UPDATE
+        else if (view == Update) {
+
+            if (roll.isEmpty() || name.isEmpty()
+                    || marks.isEmpty()) {
+                showMessage("Error",
+                        "Enter roll number, name and marks");
+                return;
+            }
+
+            ContentValues values = new ContentValues();
+            values.put("name", name);
+            values.put("marks", marks);
+
+            int result = db.update(
+                    "student", values,
+                    "rollno = ?", new String[]{roll});
+
+            if (result > 0) {
+                showMessage("Success", "Record modified");
+                clearText();
+            } else {
+                showMessage("Error", "Invalid roll number");
+            }
+        }
+
+        // VIEW ONE RECORD
+        else if (view == ViewButton) {
+
+            if (roll.isEmpty()) {
+                showMessage("Error", "Enter roll number");
+                return;
+            }
+
+            try {
+                String nameResult = DatabaseUtils.stringForQuery(
+                        db,
+                        "SELECT name FROM student WHERE rollno = ?",
+                        new String[]{roll});
+
+                String marksResult = DatabaseUtils.stringForQuery(
+                        db,
+                        "SELECT marks FROM student WHERE rollno = ?",
+                        new String[]{roll});
+
+                Name.setText(nameResult);
+                Marks.setText(marksResult);
+
+            } catch (Exception e) {
+                showMessage("Error", "Invalid roll number");
+            }
+        }
+
+        // VIEW ALL RECORDS
+        else if (view == ViewAll) {
+
+            String result = DatabaseUtils.stringForQuery(
+                    db,
+                    "SELECT GROUP_CONCAT(" +
+                            "'Roll No: ' || rollno || char(10) || " +
+                            "'Name: ' || name || char(10) || " +
+                            "'Marks: ' || marks, char(10) || char(10)) " +
+                            "FROM student",
+                    null);
+
+            if (result == null || result.isEmpty()) {
+                showMessage("Error", "No records found");
+            } else {
+                showMessage("Student Details", result);
+            }
+        }
+    }
+
+    private void clearText() {
+        Rollno.setText("");
+        Name.setText("");
+        Marks.setText("");
+        Rollno.requestFocus();
+    }
+
+    private void showMessage(String title, String message) {
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setCancelable(true)
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (db != null && db.isOpen()) {
+            db.close();
+        }
+        super.onDestroy();
+    }
+}
