@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:gravity="center_horizontal">
+
+    <EditText
+        android:id="@+id/Rollno"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Roll Number" />
+
+    <EditText
+        android:id="@+id/Name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Name" />
+
+    <EditText
+        android:id="@+id/Marks"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Marks"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/Insert"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="INSERT" />
+
+    <Button
+        android:id="@+id/View"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="VIEW" />
+
+    <Button
+        android:id="@+id/ViewAll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="VIEW ALL" />
+
+</LinearLayout>
