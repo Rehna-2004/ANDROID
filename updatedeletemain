@@ -1,0 +1,173 @@
+package com.example.updatedelete;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+
+public class MainActivity extends AppCompatActivity
+        implements View.OnClickListener {
+
+    EditText Rollno, Name, Marks;
+    Button Insert, Update, Delete;
+    SQLiteDatabase db;
+    boolean edit = false;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        Rollno = findViewById(R.id.Rollno);
+        Name = findViewById(R.id.Name);
+        Marks = findViewById(R.id.Marks);
+
+        Insert = findViewById(R.id.Insert);
+        Update = findViewById(R.id.Update);
+        Delete = findViewById(R.id.Delete);
+
+        Insert.setOnClickListener(this);
+        Update.setOnClickListener(this);
+        Delete.setOnClickListener(this);
+
+        db = openOrCreateDatabase(
+                "StudentDB", Context.MODE_PRIVATE, null);
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS student (" +
+                "rollno VARCHAR PRIMARY KEY, " +
+                "name VARCHAR, marks VARCHAR)");
+    }
+
+    @Override
+    public void onClick(View v) {
+
+        String roll = Rollno.getText().toString().trim();
+        String name = Name.getText().toString().trim();
+        String marks = Marks.getText().toString().trim();
+
+        // INSERT
+        if (v == Insert) {
+
+            if (roll.isEmpty() || name.isEmpty()
+                    || marks.isEmpty()) {
+                showMessage("Error", "Enter all values");
+                return;
+            }
+
+            ContentValues values = new ContentValues();
+            values.put("rollno", roll);
+            values.put("name", name);
+            values.put("marks", marks);
+
+            long result = db.insert("student", null, values);
+
+            if (result != -1) {
+                showMessage("Success", "Record added");
+                clearText();
+            } else {
+                showMessage("Error",
+                        "Record not added. Roll number already exists");
+            }
+        }
+
+        // UPDATE
+        else if (v == Update) {
+
+            if (roll.isEmpty()) {
+                showMessage("Error", "Enter roll number");
+                return;
+            }
+
+            if (!edit) {
+
+                Cursor c = db.rawQuery(
+                        "SELECT * FROM student WHERE rollno = ?",
+                        new String[]{roll});
+
+                if (c.moveToFirst()) {
+                    Name.setText(c.getString(1));
+                    Marks.setText(c.getString(2));
+                    edit = true;
+                } else {
+                    showMessage("Error", "Invalid roll number");
+                }
+
+                c.close();
+
+            } else {
+
+                if (name.isEmpty() || marks.isEmpty()) {
+                    showMessage("Error", "Enter all values");
+                    return;
+                }
+
+                ContentValues values = new ContentValues();
+                values.put("name", name);
+                values.put("marks", marks);
+
+                int result = db.update(
+                        "student", values,
+                        "rollno = ?", new String[]{roll});
+
+                if (result > 0) {
+                    showMessage("Success", "Record modified");
+                    clearText();
+                    edit = false;
+                } else {
+                    showMessage("Error", "Record not modified");
+                }
+            }
+        }
+
+        // DELETE
+        else if (v == Delete) {
+
+            if (roll.isEmpty()) {
+                showMessage("Error", "Enter roll number");
+                return;
+            }
+
+            int result = db.delete(
+                    "student", "rollno = ?",
+                    new String[]{roll});
+
+            if (result > 0) {
+                showMessage("Success", "Record deleted");
+                clearText();
+                edit = false;
+            } else {
+                showMessage("Error", "Invalid roll number");
+            }
+        }
+    }
+
+    private void clearText() {
+        Rollno.setText("");
+        Name.setText("");
+        Marks.setText("");
+        Rollno.requestFocus();
+    }
+
+    private void showMessage(String title, String message) {
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (db != null && db.isOpen()) {
+            db.close();
+        }
+        super.onDestroy();
+    }
+}
